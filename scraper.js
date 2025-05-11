@@ -108,7 +108,7 @@ async function checkStock(producto, page) {
 }
 
 async function scrapeStock(listaProductos) {
-  console.log("🧭 Ejecutable de Chrome:", executablePath());
+  console.log("🧭 Ejecutable de Chrome:", executablePath);
 const browser = await puppeteer.launch({
   headless: 'new',
   executablePath: executablePath,
