@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "main": "run.js",
   "scripts": {
-    "start": "node run.js",
-    "postinstall": "puppeteer browsers install chrome"
-  
+    "start": "node run.js"
   },
   "keywords": [],
   "author": "",
