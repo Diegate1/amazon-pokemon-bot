@@ -4,7 +4,7 @@
 //Poder poner comandos desde el grupo para que el bot muestre lo que hay disponible actualmente (no se si es posible)
 
 const puppeteer = require('puppeteer-core');
-const { executablePath } = require('puppeteer'); // <- esto importa la ruta real de Chrome
+const executablePath = '/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
@@ -111,7 +111,7 @@ async function scrapeStock(listaProductos) {
   console.log("🧭 Ejecutable de Chrome:", executablePath());
 const browser = await puppeteer.launch({
   headless: 'new',
-  executablePath: executablePath(),
+  executablePath: executablePath,
   args: ['--no-sandbox', '--disable-setuid-sandbox']
 });
 
