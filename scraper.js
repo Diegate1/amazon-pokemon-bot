@@ -3,7 +3,8 @@
 //Pasar esto a otras tiendas
 //Poder poner comandos desde el grupo para que el bot muestre lo que hay disponible actualmente (no se si es posible)
 
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const { executablePath } = require('puppeteer'); // <- esto importa la ruta real de Chrome
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
@@ -107,11 +108,14 @@ async function checkStock(producto, page) {
 }
 
 async function scrapeStock(listaProductos) {
-    const browser = await puppeteer.launch({
-      headless: true,
-      defaultViewport: null,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+  console.log("🧭 Ejecutable de Chrome:", executablePath());
+const browser = await puppeteer.launch({
+  headless: 'new',
+  executablePath: executablePath(),
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
+
+  
   
     const page = await browser.newPage();
     await page.setUserAgent(
