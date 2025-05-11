@@ -3,7 +3,7 @@
 //Pasar esto a otras tiendas
 //Poder poner comandos desde el grupo para que el bot muestre lo que hay disponible actualmente (no se si es posible)
 
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const executablePath = '/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
 const cron = require('node-cron');
 const fs = require('fs');
@@ -108,12 +108,11 @@ async function checkStock(producto, page) {
 }
 
 async function scrapeStock(listaProductos) {
-  console.log("🧭 Ejecutable de Chrome:", executablePath);
-const browser = await puppeteer.launch({
-  headless: 'new',
-  executablePath: executablePath,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
-});
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  
 
   
   
