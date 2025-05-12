@@ -51,29 +51,36 @@ async function checkStock(producto) {
 }
 
 async function scrapeStock(listaProductos) {
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  const browser = await chromium.launch({
+    headless: true
   });
-  
 
-  
-  
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
-    );
-  
-    const resultados = [];
-    for (const producto of listaProductos) {
-      console.log(`🔎 Revisando ${producto.nombre}`);
-      const estado = await checkStock(producto, page);
-      resultados.push(estado);
-    }
-  
-    await browser.close();
-    return resultados;
+  const page = await browser.newPage();
+  await page.setUserAgent(
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+  );
+
+  const resultados = [];
+  for (const producto of listaProductos) {
+    console.log(`🔎 Revisando ${producto.nombre}`);
+    await page.goto(producto.url, { waitUntil: 'networkidle' });
+    
+    const disponible = await page.evaluate(() => {
+      const buyBtn = document.getElementById('buy-now-button') || document.getElementById('add-to-cart-button');
+      const sinStockText = document.body.innerText.toLowerCase().includes("no disponible");
+      return buyBtn && !sinStockText;
+    });
+
+    resultados.push({
+      nombre: producto.nombre,
+      url: producto.url,
+      disponible
+    });
   }
+
+  await browser.close();
+  return resultados;
+}
   
 
 function cargarEstadoAnterior() {
