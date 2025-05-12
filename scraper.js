@@ -27,10 +27,12 @@ function cargarProductosDesdeExcel(path = './productos.xlsx') {
 }
 
 async function scrapeStock(listaProductos) {
- const browser = await puppeteer.launch({
+const browser = await puppeteer.launch({
   headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  executablePath: '/usr/bin/google-chrome',
+  args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage']
 });
+
 
 
   const page = await browser.newPage();
