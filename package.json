@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "run.js",
   "scripts": {
-    "start": "node run.js",
-    "postinstall": "npx playwright install --with-deps"
+    "start": "node run.js"
   },
   "keywords": [],
   "author": "",
