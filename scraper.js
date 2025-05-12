@@ -3,17 +3,15 @@
 //Pasar esto a otras tiendas
 //Poder poner comandos desde el grupo para que el bot muestre lo que hay disponible actualmente (no se si es posible)
 
-const { chromium } = require('playwright'); // Reemplaza puppeteer por esto
+const puppeteer = require('puppeteer');
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
 const buscarProductosAuto = require('./buscar_productos_tienda');
 
-
 const TELEGRAM_BOT_TOKEN = '7720982135:AAFWomlulmpiUSUIQ6BSbrXW7s0FBlKSJMg';
 const TELEGRAM_CHAT_ID = '-4763913178';
 const ESTADOS_PATH = path.join(__dirname, 'stock_status.json');
-
 
 const XLSX = require('xlsx');
 
@@ -28,31 +26,10 @@ function cargarProductosDesdeExcel(path = './productos.xlsx') {
   }));
 }
 
-
-
-async function checkStock(producto) {
-  const browser = await webkit.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto(producto.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
-
-  const disponible = await page.evaluate(() => {
-    const buyBtn = document.getElementById('buy-now-button') || document.getElementById('add-to-cart-button');
-    const sinStockText = document.body.innerText.toLowerCase().includes("no disponible");
-    return buyBtn && !sinStockText;
-  });
-
-  await browser.close();
-
-  return {
-    nombre: producto.nombre,
-    url: producto.url,
-    disponible
-  };
-}
-
 async function scrapeStock(listaProductos) {
-  const browser = await chromium.launch({
-    headless: true
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browser.newPage();
@@ -61,27 +38,36 @@ async function scrapeStock(listaProductos) {
   );
 
   const resultados = [];
+
   for (const producto of listaProductos) {
     console.log(`🔎 Revisando ${producto.nombre}`);
-    await page.goto(producto.url, { waitUntil: 'networkidle' });
-    
-    const disponible = await page.evaluate(() => {
-      const buyBtn = document.getElementById('buy-now-button') || document.getElementById('add-to-cart-button');
-      const sinStockText = document.body.innerText.toLowerCase().includes("no disponible");
-      return buyBtn && !sinStockText;
-    });
+    try {
+      await page.goto(producto.url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    resultados.push({
-      nombre: producto.nombre,
-      url: producto.url,
-      disponible
-    });
+      const disponible = await page.evaluate(() => {
+        const buyBtn = document.getElementById('buy-now-button') || document.getElementById('add-to-cart-button');
+        const sinStockText = document.body.innerText.toLowerCase().includes("no disponible");
+        return buyBtn && !sinStockText;
+      });
+
+      resultados.push({
+        nombre: producto.nombre,
+        url: producto.url,
+        disponible
+      });
+    } catch (err) {
+      console.error(`❌ Error al revisar ${producto.nombre}:`, err.message);
+      resultados.push({
+        nombre: producto.nombre,
+        url: producto.url,
+        disponible: false
+      });
+    }
   }
 
   await browser.close();
   return resultados;
 }
-  
 
 function cargarEstadoAnterior() {
   try {
@@ -127,16 +113,12 @@ async function comprobarYNotificar() {
     const icono = producto.disponible ? "✅" : "❌";
     console.log(`📦 ${producto.nombre} → ${icono} ${producto.disponible ? "Disponible" : "No disponible"}`);
 
-    // 🚀 ENVIAR TODOS para pruebas:
+    // Enviar siempre para pruebas
     await sendToTelegram(producto);
 
-    // 👇 VERSIÓN ORIGINAL (descomenta si querés volver al comportamiento anterior)
+    // 👉 Restaurar lógica original si lo deseas
     /*
-    if (anterior === undefined) {
-      console.log(`🔍 Estado nuevo registrado para ${producto.nombre}`);
-      continue;
-    }
-
+    if (anterior === undefined) continue;
     if (!anterior && producto.disponible) {
       await sendToTelegram(producto);
     }
@@ -146,8 +128,7 @@ async function comprobarYNotificar() {
   guardarEstadoActual(nuevosEstados);
 }
 
-
-// 🔁 Ejecutar cada 1 minutos
+// 🔁 Ejecutar cada minuto (ajusta según necesidad)
 cron.schedule('*/1 * * * *', () => {
   console.log("⏱️ Ejecutando comprobación con comparación de estado...");
   comprobarYNotificar().catch(err => console.error("❌ Error:", err));

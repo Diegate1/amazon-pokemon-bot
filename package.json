@@ -4,8 +4,7 @@
   "main": "run.js",
   "scripts": {
     "start": "node run.js",
-    "postinstall": "npx playwright install --with-deps",
-    "start": "node run.js"
+    "postinstall": "npx playwright install --with-deps"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +14,7 @@
     "express": "^5.1.0",
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
-    "playwright": "^1.52.0",
+    "puppeteer": "^24.8.2",
     "xlsx": "^0.18.5"
   }
 }
