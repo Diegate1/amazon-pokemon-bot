@@ -3,8 +3,7 @@
 //Pasar esto a otras tiendas
 //Poder poner comandos desde el grupo para que el bot muestre lo que hay disponible actualmente (no se si es posible)
 
-const puppeteer = require('puppeteer');
-const executablePath = '/opt/render/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
+const { webkit } = require('playwright'); // o chromium/firefox si quieres probar
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
@@ -14,66 +13,6 @@ const buscarProductosAuto = require('./buscar_productos_tienda');
 const TELEGRAM_BOT_TOKEN = '7720982135:AAFWomlulmpiUSUIQ6BSbrXW7s0FBlKSJMg';
 const TELEGRAM_CHAT_ID = '-4763913178';
 const ESTADOS_PATH = path.join(__dirname, 'stock_status.json');
-
-const etbPrincipales = [
-  {
-    nombre: "Pokémon Caja de Entrenador Élite de Escarlata y Púrpura - Juntos de Aventuras de JCC Pokémon",
-    url: "https://www.amazon.es/dp/B0DT7C24XM"
-  },
-  {
-    nombre: "Caja de Entrenador Élite - Evoluciones Prismáticas",
-    url: "https://www.amazon.es/dp/B0DM6HQ8X5"
-  },
-  {
-    nombre: "Caja de Entrenador Élite - Chispas Fulgurantes",
-    url: "https://www.amazon.es/dp/B0DNNC5STT"
-  },
-  {
-    nombre: "Caja de Ilustración Especial - Llamas Obsidianas",
-    url: "https://www.amazon.es/dp/B0C64HDD6D"
-  },
-  {
-    nombre: "Pokémon JCC: Caja de Entrenador Élite de Escarlata y Púrpura-Evoluciones en Paldea de JCC",
-    url: "https://www.amazon.es/dp/B0C646BFTG"
-  },
-  {
-    nombre: "Caja de Entrenador Élite Cartas Pokemon Corona Zenit TCG",
-    url: "https://www.amazon.es/dp/B0BPYWWNJZ"
-  }
-];
-
-const etbOtros = [
-  {
-    nombre: "Pokémon TCG: Scarlet & Violet—Temporal Forces Elite Trainer Box - Hojas de Hierro (Ingles)",
-    url: "https://www.amazon.es/dp/B0CS7P4W8C"
-  },
-  {
-    nombre: "Pokémon TCG: Scarlet & Violet—Temporal Forces Elite Trainer Box – Walking Wake (Ingles)",
-    url: "https://www.amazon.es/dp/B0CS7M871R?th=1"
-  },
-  {
-    nombre: "Lata Coleccionable - Miraidon (Scarlet & Violet) (Ingles)",
-    url: "https://www.amazon.es/dp/B0BTJ9VYC6"
-  },
-  {
-    nombre: "Caja de Entrenador Élite - Fábula Velada (Shrouded Fable) (Ingles)",
-    url: "https://www.amazon.es/dp/B0D4B4SL9X"
-  }
-];
-
-const coleccionesPrincipales = [
-  {
-    nombre: "Caja Ilustración - Scarlet & Violet Illustration Collection (Heartforcards)",
-    url: "https://www.amazon.es/dp/B0DBVNGZ4R"
-  },
-  
-];
-
-const coleccionesOtros = [];
-
-
-
-//const productos = [];
 
 
 const XLSX = require('xlsx');
@@ -91,14 +30,18 @@ function cargarProductosDesdeExcel(path = './productos.xlsx') {
 
 
 
-async function checkStock(producto, page) {
-  await page.goto(producto.url, { waitUntil: 'networkidle2', timeout: 60000 });
+async function checkStock(producto) {
+  const browser = await webkit.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.goto(producto.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
   const disponible = await page.evaluate(() => {
     const buyBtn = document.getElementById('buy-now-button') || document.getElementById('add-to-cart-button');
     const sinStockText = document.body.innerText.toLowerCase().includes("no disponible");
     return buyBtn && !sinStockText;
   });
+
+  await browser.close();
 
   return {
     nombre: producto.nombre,
