@@ -3,7 +3,7 @@
 //Pasar esto a otras tiendas
 //Poder poner comandos desde el grupo para que el bot muestre lo que hay disponible actualmente (no se si es posible)
 
-const { webkit } = require('playwright'); // o chromium/firefox si quieres probar
+const { chromium } = require('playwright'); // Reemplaza puppeteer por esto
 const cron = require('node-cron');
 const fs = require('fs');
 const path = require('path');
